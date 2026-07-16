@@ -1,0 +1,23 @@
+Package: MultLognGPD
+Title: Estimation of a multivariate lognormal - Generalized Pareto Mixture
+Version: 0.1.0
+Authors@R: 
+    person("Marco", "Bee", , "marco.bee@unitn.it", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-9579-3650"))
+Description: Estimation of a Multivariate lognormal - Generalized Pareto mixture via the Expectation-Maximization algorithm. Functions for random number simulation and density evaluation are also available. 
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Depends: 
+    R (>= 4.0.0)
+LazyData: true
+RdMacros: Rdpack
+Imports:
+		     evd,
+         Rdpack,
+         parallel,
+         LNPar,
+         EnvStats
+URL: https://github.com/marco-bee/MultLognGPD
+BugReports: https://github.com/marco-bee/MultLognGPD/issues
+Config/roxygen2/version: 8.0.0

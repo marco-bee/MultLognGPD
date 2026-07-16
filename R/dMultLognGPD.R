@@ -27,15 +27,15 @@ dMultLognGPD <- function(x,p,mu,Psi,gpdpars,gammap)
   d <- ncol(x)
   u <- matrix(0,n,d)
   f2gpd <- matrix(0,n,d)
-  d1 <- dlnorm.rplus(x,mu,Psi)
-  gum.cop <- gumbelCopula(gammap,dim=d)
+  d1 <- compositions::dlnorm.rplus(x,mu,Psi)
+  gum.cop <- copula::gumbelCopula(gammap,dim=d)
   for (i in 1:d)
   {
     u[,i] <- evd::pgpd(x[,i],0,gpdpars[1,i],gpdpars[2,i])
     f2gpd[,i] <- evd::dgpd(x[,i],0,gpdpars[1,i],gpdpars[2,i])
   }
   u <- pmin(pmax(u,1e-10),1-1e-10)
-  d2 <- dCopula(u,gum.cop) * apply(f2gpd,1,prod)
+  d2 <- copula::dCopula(u,gum.cop) * apply(f2gpd,1,prod)
   dmix <- p * d1 + (1-p) * d2
   return(dmix)
 }
