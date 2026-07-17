@@ -16,8 +16,6 @@ Imports:
 		     evd,
          Rdpack,
          parallel,
-         LNPar,
-         EnvStats,
          copula,
          compositions
 URL: https://github.com/marco-bee/MultLognGPD
