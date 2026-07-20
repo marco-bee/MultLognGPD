@@ -16,8 +16,8 @@ Imports:
 		     evd,
          Rdpack,
          parallel,
-         LNPar,
-         EnvStats
+         copula,
+         compositions
 URL: https://github.com/marco-bee/MultLognGPD
 BugReports: https://github.com/marco-bee/MultLognGPD/issues
 Config/roxygen2/version: 8.0.0
