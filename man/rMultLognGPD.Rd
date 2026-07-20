@@ -5,7 +5,7 @@
 \title{Simulation of a multivariate lognormal-GPD mixture, where the GPD has a
 Gumbel dependence structure}
 \usage{
-rMultLognGPD(n, p, d, mu, Psi, xivec, betavec, gammap)
+rMultLognGPD(n, p, d, mu, Psi, gpdpars, gammap)
 }
 \arguments{
 \item{n}{positive integer: number of observations sampled.}
@@ -19,11 +19,9 @@ rMultLognGPD(n, p, d, mu, Psi, xivec, betavec, gammap)
 \item{Psi}{positive definite symmetric (dxd) matrix: covariance matrix of
 the underlying multivariate normal distribution.}
 
-\item{xivec}{d-vector of positive real numbers: shape parameters of the
-marginal generalized Pareto distributions.}
-
-\item{betavec}{d-vector of positive real numbers: scale parameters of the
-marginal generalized Pareto distributions.}
+\item{gdppars}{(2xd)-vector of positive real numbers: matrix whose i-th
+column contains the scale and shape parameters of the i-th
+marginal generalized Pareto distribution.}
 }
 \value{
 ysim (n x d) matrix: n random vectors from the
@@ -33,6 +31,7 @@ d-variate lognormal - generalized Pareto mixture.
 This function simulates a multivariate lognormal-GPD mixture.
 }
 \examples{
-ysim <- rMultLognGPD(100,.9,2,c(0,0),diag(2),c(.25,.5),c(1,1.5),2)
+gpdpars <- cbind(c(1,0.5),c(1.5,0.25))
+ysim <- rMultLognGPD(100,.9,2,c(0,0),diag(2),gpdpars,2)
 
 }
