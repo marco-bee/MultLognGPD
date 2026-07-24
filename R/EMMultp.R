@@ -51,7 +51,7 @@ EMMultp <- function(ymix,eps,maxiter,nboot = 0)
     }
     else
     {
-      gpdparst[,i] <- as.vector(fitted_GPD$estimate) # beta, xi
+      gpdparst[,i] <- as.vector(pmax(fitted_GPD$estimate,c(.01,.01))) # beta, xi
     }
   }
   uu <- copula::pobs(ymix)                # pseudo-observations
