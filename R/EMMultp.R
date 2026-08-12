@@ -114,7 +114,7 @@ EMMultp <- function(ymix,eps,maxiter,nboot = 0)
         change <- ell_inf - loglik[nit]
         if ((change < eps && change > 0) || nit==maxiter)
         {
-          out <- list(pars = pars, loglik = loglik, niter = nit, post_p = post_p)
+          out <- list(pars = pars, loglik = loglik[nit], niter = nit, post_p = post_p)
           return(out)
         }
       }
