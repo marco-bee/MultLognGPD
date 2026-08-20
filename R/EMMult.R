@@ -19,11 +19,11 @@
 #' @examples
 #' y <- rMultLognGPD(100,.9,2,c(0,0),diag(2),c(.25,.5),c(1,1.5),2)
 #' x0 <- c(.7,.2,1.3,.8,1.7)
-#' res <- EMlogngpdmix(x0, y, 1000)
+#' res <- EMMult(y, 1e-10, 1000)
 #'
 #' @importFrom Rdpack reprompt
 
-EMMult <- function(ymix,eps,maxiter)
+EMMult <- function(ymix,eps,maxiter,nboot = 0)
 {
   nit = 1
   n = nrow(ymix)
@@ -39,19 +39,19 @@ EMMult <- function(ymix,eps,maxiter)
   f1 <- rep(0,n)
   dev1 <- matrix(0,n,d)
   change = 100
-
+  
   # initialization
   
   p <-  .5
   for (i in 1:d)
   {
-    fitted_GPD <- try(evd::fpot(ymix[,i], threshold = quantile(ymix[,i],.7)))
+    fitted_GPD <- try(evd::fpot(ymix[,i], threshold = quantile(ymix[,i],.7))) # scale, shape
     if (inherits(fitted_GPD, "try-error")) {
       gpdparst[,i] <- c(1,.5)
     }
     else
     {
-      gpdparst[,i] <- as.vector(fitted_GPD$estimate) # beta, xi
+      gpdparst[,i] <- as.vector(pmax(fitted_GPD$estimate,c(.01,.01))) # beta, xi
     }
   }
   uu <- copula::pobs(ymix)                # pseudo-observations
@@ -61,7 +61,7 @@ EMMult <- function(ymix,eps,maxiter)
   parold <- c(p,mu,Psi.low,matrixcalc::vec(gpdparst),gammap)
   
   while ((change > eps || change < 0) && nit <= maxiter)
-    {
+  {
     print(nit)
     f1 <- compositions::dlnorm.rplus(ymix,mu,Psi)   
     gum.cop <- copula::gumbelCopula(gammap,dim=d)
@@ -88,7 +88,7 @@ EMMult <- function(ymix,eps,maxiter)
     Psi <- t(dev1) %*% dev1 /(n*p)
     Psi <- as.matrix(Matrix::nearPD(Psi)$mat)
     Psi.low <- Psi[lower.tri(Psi,diag=TRUE)]
-
+    
     # CM-step 1: marginal GPD parameters 
     
     gpdpars = optim(log(matrixcalc::vec(gpdparst)),weiGpdLik,gr=NULL,
@@ -103,19 +103,50 @@ EMMult <- function(ymix,eps,maxiter)
     
     pars <- c(p,mu,Psi.low,matrixcalc::vec(gpdparst),gammap)
     loglik[nit] <- sum(log(dMultLognGPD(ymix,p,mu,Psi,gpdparst,gammap)))        # evaluate log-likelihood function
-  
-    if (nit>2)
+    
+    if (nboot == 0)
     {
-      alpha <- (loglik[nit] - loglik[nit-1]) / (loglik[nit-1] - loglik[nit-2]) # Aitken's acceleration (Cui et al. 2026, p. 4)
-      ell_inf <- loglik[nit] + (1/(1-alpha)) * (loglik[nit] - loglik[nit-1])
-      parold = pars
-      change <- ell_inf - loglik[nit]
-      if ((change < eps && change > 0) || nit==maxiter)
+      if (nit>2)
       {
-        out <- list(pars = pars, loglik = loglik, niter = nit, post_p = post_p)
-        return(out)
+        alpha <- (loglik[nit] - loglik[nit-1]) / (loglik[nit-1] - loglik[nit-2]) # Aitken's acceleration (Cui et al. 2026, p. 4)
+        ell_inf <- loglik[nit] + (1/(1-alpha)) * (loglik[nit] - loglik[nit-1])
+        parold = pars
+        change <- ell_inf - loglik[nit]
+        if ((change < eps && change >= 0) || nit==maxiter)
+        {
+          out <- list(pars = pars, loglik = loglik[nit], niter = nit, post_p = post_p)
+          return(out)
+        }
       }
+      nit <- nit + 1
     }
-    nit <- nit + 1
+    else
+    {
+      nreps.list <- sapply(1:nboot, list)
+      chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+      if (nzchar(chk) && chk == "TRUE") {
+        n.cores <- 2L
+      } else {
+        n.cores <- parallel::detectCores()
+      }
+      clust <- parallel::makeCluster(n.cores)
+      BootMat = matrix(0,nboot,1+d+d*(d+1)/2+2*d+1)
+      temp <- parallel::parLapply(clust,nreps.list, EMMultBoot,ymix,eps,maxiter)
+      parallel::stopCluster(cl=clust)
+      for (i in 1:nboot)
+      {
+        BootMat[i,] = as.vector(unlist(temp[[i]]))
+      }
+      stddev = apply(BootMat,2,sd,na.rm=TRUE)
+      out <- list(pars = pars, loglik = loglik, niter = nit, post_p = post_p,bootEst=BootMat,bootStd=stddev)
+      return(out)
+      # if ((change < eps && change > 0) || nit==maxiter)
+      # {
+      #   out <- list(pars = pars, loglik = loglik, niter = nit, post_p = post_p)
+      #   return(out)
+      # }
+      nit <-  nit + 1
+    }
+    # nit <- nit + 1
   }
 }

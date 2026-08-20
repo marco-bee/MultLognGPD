@@ -8,7 +8,7 @@
 #' @param mu (dx1) vector: log-mean of the multivariate lognormal distribution.
 #' @param Psi positive definite symmetric (dxd) matrix: covariance matrix of
 #' the underlying multivariate normal distribution.
-#' @param gdppars (2xd)-vector of positive real numbers: matrix whose i-th 
+#' @param gdppars (2xd)-matrix of positive real numbers: matrix whose i-th 
 #' column contains the scale and shape parameters of the i-th
 #' marginal generalized Pareto distribution.
 #' @return ysim (n x d) matrix: n random vectors from the
