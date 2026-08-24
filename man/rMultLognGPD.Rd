@@ -10,7 +10,7 @@ rMultLognGPD(n, p, d, mu, Psi, gpdpars, gammap)
 \arguments{
 \item{n}{positive integer: number of observations sampled.}
 
-\item{p}{real, 0<p<1: prior probability}
+\item{p}{real, 0<p<1: prior probability.}
 
 \item{d}{positive integer: dimension of the distribution.}
 

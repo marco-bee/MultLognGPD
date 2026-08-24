@@ -16,7 +16,7 @@ EMMultBoot = function(x,y,eps,maxiter)
   samSiz <- nrow(y)
   indici = sample(samSiz, samSiz, replace = TRUE)
   yboot = y[indici,]
-  temp <- EMMultp(yboot,eps,maxiter)
+  temp <- EMMult(yboot,eps,maxiter)
   res <- temp$pars
   results <- list(res=res)
 }

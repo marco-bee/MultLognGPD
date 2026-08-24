@@ -62,7 +62,6 @@ EMMult <- function(ymix,eps,maxiter,nboot = 0)
   
   while ((change > eps || change < 0) && nit <= maxiter)
   {
-    print(nit)
     f1 <- compositions::dlnorm.rplus(ymix,mu,Psi)   
     gum.cop <- copula::gumbelCopula(gammap,dim=d)
     for (i in 1:d)
