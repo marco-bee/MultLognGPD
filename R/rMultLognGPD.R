@@ -3,7 +3,7 @@
 #'
 #' This function simulates a multivariate lognormal-GPD mixture.
 #' @param n positive integer: number of observations sampled.
-#' @param p real, 0<p<1: prior probability
+#' @param p real, 0<p<1: prior probability.
 #' @param d positive integer: dimension of the distribution.
 #' @param mu (dx1) vector: log-mean of the multivariate lognormal distribution.
 #' @param Psi positive definite symmetric (dxd) matrix: covariance matrix of
