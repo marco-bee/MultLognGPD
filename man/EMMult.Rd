@@ -4,7 +4,7 @@
 \alias{EMMult}
 \title{Multivariate estimation}
 \usage{
-EMMult(ymix, eps, maxiter)
+EMMult(ymix, eps, maxiter, nboot = 0)
 }
 \arguments{
 \item{ymix}{data matrix (nxd): observed data.}
@@ -33,6 +33,6 @@ computed via parallel computing.
 \examples{
 y <- rMultLognGPD(100,.9,2,c(0,0),diag(2),c(.25,.5),c(1,1.5),2)
 x0 <- c(.7,.2,1.3,.8,1.7)
-res <- EMlogngpdmix(x0, y, 1000)
+res <- EMMult(y, 1e-10, 1000)
 
 }

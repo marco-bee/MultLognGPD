@@ -2,7 +2,6 @@
 
 export(EMMult)
 export(EMMultBoot)
-export(EMMultp)
 export(dMultLognGPD)
 export(rMultLognGPD)
 export(weiCopLik)

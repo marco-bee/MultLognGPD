@@ -19,7 +19,7 @@ rMultLognGPD(n, p, d, mu, Psi, gpdpars, gammap)
 \item{Psi}{positive definite symmetric (dxd) matrix: covariance matrix of
 the underlying multivariate normal distribution.}
 
-\item{gdppars}{(2xd)-vector of positive real numbers: matrix whose i-th
+\item{gdppars}{(2xd)-matrix of positive real numbers: matrix whose i-th
 column contains the scale and shape parameters of the i-th
 marginal generalized Pareto distribution.}
 }
