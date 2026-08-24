@@ -58,8 +58,6 @@ EMMult <- function(ymix,eps,maxiter,nboot = 0)
   fit.tau <- copula::fitCopula(copula::gumbelCopula(dim=d), uu, method="itau")
   gammap <- as.double(coefficients(fit.tau))
   
-  parold <- c(p,mu,Psi.low,matrixcalc::vec(gpdparst),gammap)
-  
   while ((change > eps || change < 0) && nit <= maxiter)
   {
     f1 <- compositions::dlnorm.rplus(ymix,mu,Psi)   
@@ -70,7 +68,8 @@ EMMult <- function(ymix,eps,maxiter,nboot = 0)
       f2gpd[,i] <- evd::dgpd(ymix[,i],0,gpdparst[1,i],gpdparst[2,i])
     }
     u <- pmin(pmax(u,1e-10),1-1e-10)
-    f2 <- copula::dCopula(u,gum.cop) * apply(f2gpd,1,prod)
+    f2log <- log(copula::dCopula(u,gum.cop)) + apply(log(f2gpd),1,sum)
+    f2 <- exp(f2log)
     f <- p * f1 + (1-p) * f2       
     post_p <- p * f1 / f           # E-step
     
@@ -103,49 +102,81 @@ EMMult <- function(ymix,eps,maxiter,nboot = 0)
     pars <- c(p,mu,Psi.low,matrixcalc::vec(gpdparst),gammap)
     loglik[nit] <- sum(log(dMultLognGPD(ymix,p,mu,Psi,gpdparst,gammap)))        # evaluate log-likelihood function
     
-    if (nboot == 0)
+    if (nit > 2)
     {
-      if (nit>2)
+      alpha <- (loglik[nit] - loglik[nit-1]) /
+        (loglik[nit-1] - loglik[nit-2])
+      
+      ell_inf <- loglik[nit] +
+        (1/(1-alpha)) *
+        (loglik[nit] - loglik[nit-1])
+      
+      change <- ell_inf - loglik[nit]
+      
+      if ((change < eps && change >= 0) || nit == maxiter)
       {
-        alpha <- (loglik[nit] - loglik[nit-1]) / (loglik[nit-1] - loglik[nit-2]) # Aitken's acceleration (Cui et al. 2026, p. 4)
-        ell_inf <- loglik[nit] + (1/(1-alpha)) * (loglik[nit] - loglik[nit-1])
-        parold = pars
-        change <- ell_inf - loglik[nit]
-        if ((change < eps && change >= 0) || nit==maxiter)
-        {
-          out <- list(pars = pars, loglik = loglik[nit], niter = nit, post_p = post_p)
-          return(out)
-        }
+        break
       }
-      nit <- nit + 1
     }
-    else
-    {
-      nreps.list <- sapply(1:nboot, list)
-      chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
-      if (nzchar(chk) && chk == "TRUE") {
-        n.cores <- 2L
-      } else {
-        n.cores <- parallel::detectCores()
-      }
-      clust <- parallel::makeCluster(n.cores)
-      BootMat = matrix(0,nboot,1+d+d*(d+1)/2+2*d+1)
-      temp <- parallel::parLapply(clust,nreps.list, EMMultBoot,ymix,eps,maxiter)
-      parallel::stopCluster(cl=clust)
-      for (i in 1:nboot)
-      {
-        BootMat[i,] = as.vector(unlist(temp[[i]]))
-      }
-      stddev = apply(BootMat,2,sd,na.rm=TRUE)
-      out <- list(pars = pars, loglik = loglik, niter = nit, post_p = post_p,bootEst=BootMat,bootStd=stddev)
-      return(out)
-      # if ((change < eps && change > 0) || nit==maxiter)
-      # {
-      #   out <- list(pars = pars, loglik = loglik, niter = nit, post_p = post_p)
-      #   return(out)
-      # }
-      nit <-  nit + 1
-    }
-    # nit <- nit + 1
+    nit <- nit + 1
   }
+  # Bootstrap standard errors
+  if (nboot > 0)
+  {
+    nreps.list <- seq_len(nboot)
+    
+    chk <- Sys.getenv("_R_CHECK_LIMIT_CORES_", "")
+    if (nzchar(chk) && chk == "TRUE") {
+      n.cores <- 2L
+    } else {
+      n.cores <- parallel::detectCores()
+    }
+    
+    n.cores <- min(n.cores, nboot)
+    
+    clust <- parallel::makeCluster(n.cores)
+    
+    BootMat <- matrix(
+      0,
+      nboot,
+      1 + d + d*(d+1)/2 + 2*d + 1
+    )
+    
+    temp <- parallel::parLapply(
+      clust,
+      nreps.list,
+      EMMultBoot,
+      ymix,
+      eps,
+      maxiter
+    )
+    
+    parallel::stopCluster(clust)
+    
+    for (i in seq_len(nboot))
+    {
+      BootMat[i, ] <- as.vector(unlist(temp[[i]]))
+    }
+    
+    stddev <- apply(BootMat, 2, sd, na.rm = TRUE)
+    
+    out <- list(
+      pars = pars,
+      loglik = loglik[nit - 1],
+      niter = nit - 1,
+      post_p = post_p,
+      bootEst = BootMat,
+      bootStd = stddev
+    )
+  }
+  else
+  {
+    out <- list(
+      pars = pars,
+      loglik = loglik[nit - 1],
+      niter = nit - 1,
+      post_p = post_p
+    )
+  }
+  return(out)
 }
