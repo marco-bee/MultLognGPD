@@ -45,7 +45,8 @@ EMMult <- function(ymix,eps,maxiter,nboot = 0)
   p <-  .5
   for (i in 1:d)
   {
-    fitted_GPD <- try(evd::fpot(ymix[,i], threshold = quantile(ymix[,i],.7))) # scale, shape
+    fitted_GPD <- try(evd::fpot(ymix[,i],
+  threshold = quantile(ymix[,i],.7),std.err = FALSE)) # scale, shape
     if (inherits(fitted_GPD, "try-error")) {
       gpdparst[,i] <- c(1,.5)
     }
@@ -133,23 +134,17 @@ EMMult <- function(ymix,eps,maxiter,nboot = 0)
     }
     
     n.cores <- min(n.cores, nboot)
-    
     clust <- parallel::makeCluster(n.cores)
-    
     BootMat <- matrix(
       0,
       nboot,
       1 + d + d*(d+1)/2 + 2*d + 1
     )
     
-    temp <- parallel::parLapply(
-      clust,
-      nreps.list,
-      EMMultBoot,
-      ymix,
-      eps,
-      maxiter
-    )
+    temp <- parallel::parLapply(clust,nreps.list,EMMultBoot,
+      ymix,eps,maxiter)
+    # temp <- lapply(nreps.list,EMMultBoot,
+    #                             ymix,eps,maxiter)
     
     parallel::stopCluster(clust)
     
